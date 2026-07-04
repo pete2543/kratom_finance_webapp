@@ -1,0 +1,205 @@
+/*
+ * HeroUI Design System — จุดเดียวสำหรับ theme ทั้งระบบ
+ * ปรับ Accent / Base / Font / Radius ที่นี่ → ทุก component เปลี่ยนตาม
+ * @see docs/theme.md, docs/darkmode.md
+ */
+@layer theme, base, components, utilities;
+
+@import "tailwindcss";
+@import "@heroui/styles";
+
+/* ─── Theme tokens (export จาก HeroUI Theme Builder) ─── */
+@layer theme {
+  /* Radius — ใช้ร่วม light/dark (Common Variables) */
+  :root,
+  .light,
+  .default,
+  [data-theme="light"],
+  [data-theme="default"],
+  .dark,
+  [data-theme="dark"] {
+    --radius: 0.5rem; /* Medium — 8px  (ปุ่ม, card, modal) */
+    --field-radius: 0.75rem; /* Form Large — 12px  (input, select, textarea) */
+  }
+
+  :root,
+  .light,
+  .default,
+  [data-theme="light"],
+  [data-theme="default"] {
+    color-scheme: light;
+
+    /* ── Brand palette (Kratom Finance) ── */
+    --bg-main: #f4f7f5;
+    --bg-card: #ffffff;
+    --text-main: #1a2e22;
+    --text-muted: #5c6e63;
+    --brand-primary: #2e7d32;
+    --brand-accent: #8e24aa;
+    --brand-neon: #7cb342;
+    --border-color: #e0e6e2;
+
+    /* ── HeroUI semantic mapping ── */
+    --background: var(--bg-main);
+    --foreground: var(--text-main);
+
+    --surface: var(--bg-card);
+    --surface-foreground: var(--text-main);
+    --surface-secondary: #eef2ef;
+    --surface-secondary-foreground: var(--text-main);
+    --surface-tertiary: #e8ede9;
+    --surface-tertiary-foreground: var(--text-main);
+
+    --overlay: var(--bg-card);
+    --overlay-foreground: var(--text-main);
+
+    --muted: var(--text-muted);
+    --default: #e8ede9;
+    --default-foreground: var(--text-main);
+
+    --accent: var(--brand-primary);
+    --accent-foreground: #ffffff;
+
+    --border: var(--border-color);
+    --separator: var(--border-color);
+    --focus: var(--brand-primary);
+    --link: var(--brand-primary);
+
+    --field-background: var(--bg-card);
+    --field-foreground: var(--text-main);
+    --field-placeholder: var(--text-muted);
+    --field-border: transparent;
+
+    --success: var(--brand-neon);
+    --success-foreground: var(--text-main);
+    --warning: #f9a825;
+    --warning-foreground: var(--text-main);
+    --danger: #c62828;
+    --danger-foreground: #ffffff;
+
+    --segment: var(--bg-card);
+    --segment-foreground: var(--text-main);
+    --scrollbar: #d5ddd8;
+
+    --font-sans: var(--font-inter);
+  }
+
+  .dark,
+  [data-theme="dark"] {
+    color-scheme: dark;
+
+    /* ── Brand palette (Kratom Finance — neon night) ── */
+    --bg-main: #0b0f0c;
+    --bg-card: #141a16;
+    --text-main: #e2ece5;
+    --text-muted: #8a9a90;
+    --brand-primary: #4caf50;
+    --brand-accent: #d81b60;
+    --brand-neon: #ccff00;
+    --border-color: #222d26;
+
+    /* ── HeroUI semantic mapping ── */
+    --background: var(--bg-main);
+    --foreground: var(--text-main);
+
+    --surface: var(--bg-card);
+    --surface-foreground: var(--text-main);
+    --surface-secondary: #1a221c;
+    --surface-secondary-foreground: var(--text-main);
+    --surface-tertiary: #1e2821;
+    --surface-tertiary-foreground: var(--text-main);
+
+    --overlay: #1a221c;
+    --overlay-foreground: var(--text-main);
+
+    --muted: var(--text-muted);
+    --default: #1e2821;
+    --default-foreground: var(--text-main);
+
+    --accent: var(--brand-primary);
+    --accent-foreground: var(--bg-main);
+
+    --border: var(--border-color);
+    --separator: var(--border-color);
+    --focus: var(--brand-neon);
+    --link: var(--brand-primary);
+
+    --field-background: var(--bg-card);
+    --field-foreground: var(--text-main);
+    --field-placeholder: var(--text-muted);
+    --field-border: transparent;
+
+    --success: var(--brand-primary);
+    --success-foreground: var(--bg-main);
+    --warning: #ffb300;
+    --warning-foreground: var(--bg-main);
+    --danger: var(--brand-accent);
+    --danger-foreground: #ffffff;
+
+    --segment: #1e2821;
+    --segment-foreground: var(--text-main);
+    --scrollbar: #3d4f44;
+  }
+}
+
+/* เชื่อม brand tokens → Tailwind utilities */
+@theme inline {
+  --font-sans: var(--font-inter);
+
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-neon: var(--brand-neon);
+  --color-brand-neon-foreground: var(--bg-main);
+}
+
+/* ─── Layout patterns ร่วมทั้งแอป (optional) ─── */
+@layer components {
+  .ds-page {
+    @apply mx-auto max-w-6xl px-4 py-10 sm:px-6;
+  }
+
+  .ds-section-header {
+    @apply space-y-2;
+  }
+
+  .ds-title {
+    @apply text-2xl font-semibold tracking-tight text-foreground;
+  }
+
+  .ds-subtitle {
+    @apply max-w-2xl text-muted;
+  }
+
+  .ds-grid-stats {
+    @apply grid gap-4 sm:grid-cols-2 lg:grid-cols-3;
+  }
+
+  .ds-card {
+    @apply shadow-surface;
+  }
+
+  .ds-stat-value {
+    @apply text-3xl font-semibold tabular-nums;
+  }
+
+  .ds-stat-value-success {
+    @apply text-3xl font-semibold tabular-nums text-success;
+  }
+
+  .ds-stat-value-danger {
+    @apply text-3xl font-semibold tabular-nums text-danger;
+  }
+
+  .ds-code-inline {
+    @apply rounded-md bg-default px-1.5 py-0.5 text-sm;
+  }
+
+  .ds-actions {
+    @apply flex flex-wrap gap-3;
+  }
+
+  /* CTA สะดุดตา — ใช้ --brand-neon */
+  .ds-btn-neon {
+    @apply bg-brand-neon text-brand-neon-foreground font-semibold;
+  }
+}
