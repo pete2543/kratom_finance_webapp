@@ -12,12 +12,15 @@ export type Product = {
   unit: string;
   stockQty: number;
   isActive: boolean;
+  imageUrl?: string | null;
 };
 
 export type Customer = {
   id: number;
   name: string;
   phone?: string;
+  lineUserId?: string;
+  address?: string;
   creditLimit: number;
 };
 

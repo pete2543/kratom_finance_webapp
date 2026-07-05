@@ -1,0 +1,30 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model ObjectDocument {
+  objectDocumentId String    @id @default(dbgenerated("gen_random_uuid()")) @map("object_document_id") @db.Uuid
+  etag             String    @db.VarChar(255)
+  bucket           String?   @db.VarChar(100)
+  folder1          String?   @db.VarChar(100)
+  fullPath         String?   @map("full_path") @db.VarChar(300)
+  fileName         String    @map("file_name") @db.VarChar(255)
+  contentType      String?   @map("content_type") @db.VarChar(100)
+  contentSize      Decimal?  @map("content_size") @db.Decimal(18, 2)
+  fileExtention    String?   @map("file_extention") @db.VarChar(255)
+  objectName       String?   @map("object_name") @db.VarChar(255)
+  tableName        String?   @map("table_name") @db.VarChar(200)
+  tableId          String?   @map("table_id") @db.Uuid
+  tableId2         String    @map("table_id2") @db.Uuid
+  createdBy        String    @map("created_by") @db.Uuid
+  createdDate      DateTime  @default(now()) @map("created_date") @db.Timestamptz(6)
+  updatedBy        String?   @map("updated_by") @db.Uuid
+  updatedDate      DateTime? @map("updated_date") @db.Timestamptz(6)
+
+  @@map("object_document")
+}

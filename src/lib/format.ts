@@ -19,6 +19,7 @@ export function formatCurrency(value: number, decimals = false): string {
 }
 
 export function formatNumber(value: number): string {
+  if (!Number.isFinite(value)) return "0";
   return numberFmt.format(value);
 }
 
