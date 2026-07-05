@@ -17,10 +17,10 @@ export type {
 export type { CreateCustomerInput, CustomerListParams, UpdateCustomerInput } from "./customers";
 export type {
   CustomerReportData,
-  CustomerReportDetailCustomer,
-  CustomerReportDetailData,
+  CustomerReportDetail,
   CustomerReportItem,
-  CustomerReportOrderItem,
+  CustomerReportOrder,
+  CustomerReportOrderLineItem,
   CustomerReportOrdersData,
   CustomerReportOrdersSummary,
   CustomerReportParams,

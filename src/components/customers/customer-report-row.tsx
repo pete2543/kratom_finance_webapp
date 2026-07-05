@@ -1,0 +1,72 @@
+import { Chip } from "@heroui/react";
+
+import { ArrowRightIcon } from "@/components/icons";
+import { formatCurrency, formatDateShort } from "@/lib/format";
+import type { CustomerReportItem } from "@/lib/api";
+
+type CustomerReportRowProps = {
+  customer: CustomerReportItem;
+  onSelect: (customer: CustomerReportItem) => void;
+};
+
+export function CustomerReportRow({ customer, onSelect }: CustomerReportRowProps) {
+  const hasOutstanding = customer.outstandingAmount > 0;
+  const initial = customer.name.trim().charAt(0);
+
+  return (
+    <li>
+      <button
+        type="button"
+        onClick={() => onSelect(customer)}
+        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-default/60"
+      >
+        <span
+          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-semibold ${
+            hasOutstanding
+              ? "bg-danger/12 text-danger"
+              : "bg-accent/12 text-accent"
+          }`}
+        >
+          {initial}
+        </span>
+
+        <div className="min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="truncate text-sm font-medium text-foreground">
+              {customer.name}
+            </p>
+            {hasOutstanding ? (
+              <Chip size="sm" color="danger" variant="soft" className="shrink-0">
+                ค้างชำระ
+              </Chip>
+            ) : null}
+          </div>
+          <p className="mt-0.5 text-xs text-muted">
+            {customer.phone ?? "ไม่มีเบอร์โทร"}
+            {customer.lastOrderDate
+              ? ` · ซื้อล่าสุด ${formatDateShort(customer.lastOrderDate)}`
+              : ""}
+          </p>
+        </div>
+
+        <div className="flex shrink-0 items-center gap-2">
+          <div className="text-right">
+            {hasOutstanding ? (
+              <p className="text-sm font-semibold tabular-nums text-danger">
+                {formatCurrency(customer.outstandingAmount)}
+              </p>
+            ) : (
+              <p className="text-sm font-semibold tabular-nums text-foreground">
+                {formatCurrency(customer.totalAmount)}
+              </p>
+            )}
+            <p className="text-xs text-muted">
+              {customer.orderCount} ออเดอร์
+            </p>
+          </div>
+          <ArrowRightIcon width={16} height={16} className="text-muted" />
+        </div>
+      </button>
+    </li>
+  );
+}
