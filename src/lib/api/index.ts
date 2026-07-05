@@ -35,7 +35,11 @@ export type {
   CheckoutNewCustomerInput,
   CheckoutOrderInput,
   CheckoutPaymentInput,
+  Order,
+  OrderCustomer,
+  OrderItem,
   OrderListParams,
+  OrderPayment,
 } from "./orders";
 export type { CreateProductInput, ProductListParams, UpdateProductInput } from "./products";
 export type {

@@ -1,3 +1,5 @@
+import type { IconType } from "react-icons";
+
 import {
   BoxIcon,
   HomeIcon,
@@ -9,13 +11,13 @@ import {
 export type NavItem = {
   href: string;
   label: string;
-  icon: typeof HomeIcon;
+  icon: IconType;
 };
 
 export const navItems: NavItem[] = [
   { href: "/", label: "ภาพรวม", icon: HomeIcon },
   { href: "/orders", label: "ออเดอร์", icon: ReceiptIcon },
-  { href: "/wallet", label: "การเงิน", icon: WalletIcon },
+  // { href: "/wallet", label: "การเงิน", icon: WalletIcon },
   { href: "/stock", label: "สต็อก", icon: BoxIcon },
   { href: "/customers", label: "ลูกค้า", icon: UsersIcon },
 ];

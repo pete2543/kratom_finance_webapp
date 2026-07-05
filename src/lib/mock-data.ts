@@ -8,9 +8,11 @@ import type {
 } from "@/types";
 
 export const saleTypeLabels: Record<SaleTypeCode, string> = {
+  cash: "เงินสด",
+  transfer: "เงินโอน",
+  credit: "เครดิตวางบิล",
   retail: "ขายปลีก",
   wholesale: "ขายส่ง",
-  credit: "ขายเชื่อ",
 };
 
 export const paymentStatusLabels: Record<PaymentStatusCode, string> = {
@@ -73,51 +75,75 @@ export const orders: Order[] = [
     id: 101,
     code: "OD-1042",
     customerName: "ลูกค้าทั่วไป",
+    saleTypeCode: "retail",
+    saleTypeLabelTh: "ขายปลีก",
     saleType: "retail",
+    paymentStatusCode: "paid",
+    paymentStatusLabelTh: "ชำระแล้ว",
+    paymentStatus: "paid",
     orderDate: iso(1),
     totalAmount: 180,
-    paymentStatus: "paid",
+    paidAmount: 180,
     items: [
       { productId: 1, productName: "น้ำกระท่อมเข้มข้น", quantity: 3, unitPrice: 60, subtotal: 180 },
     ],
+    payments: [],
   },
   {
     id: 102,
     code: "OD-1041",
     customerName: "ร้านลุงหมี",
+    saleTypeCode: "wholesale",
+    saleTypeLabelTh: "ขายส่ง",
     saleType: "wholesale",
+    paymentStatusCode: "unpaid",
+    paymentStatusLabelTh: "ค้างชำระ",
+    paymentStatus: "unpaid",
     orderDate: iso(3),
     dueDate: iso(-168),
     totalAmount: 2400,
-    paymentStatus: "unpaid",
+    paidAmount: 0,
     items: [
       { productId: 2, productName: "สูตรมาตรฐาน", quantity: 60, unitPrice: 40, subtotal: 2400 },
     ],
+    payments: [],
   },
   {
     id: 103,
     code: "OD-1040",
     customerName: "เจ๊แดง ปากซอย",
+    saleTypeCode: "credit",
+    saleTypeLabelTh: "เครดิตวางบิล",
     saleType: "credit",
+    paymentStatusCode: "partial",
+    paymentStatusLabelTh: "ชำระบางส่วน",
+    paymentStatus: "partial",
     orderDate: iso(5),
     dueDate: iso(-72),
     totalAmount: 1200,
-    paymentStatus: "partial",
+    paidAmount: 600,
     items: [
       { productId: 3, productName: "ใบกระท่อมสด", quantity: 6, unitPrice: 200, subtotal: 1200 },
     ],
+    payments: [],
   },
   {
     id: 104,
     code: "OD-1039",
     customerName: "ลูกค้าทั่วไป",
+    saleTypeCode: "retail",
+    saleTypeLabelTh: "ขายปลีก",
     saleType: "retail",
+    paymentStatusCode: "paid",
+    paymentStatusLabelTh: "ชำระแล้ว",
+    paymentStatus: "paid",
     orderDate: iso(7),
     totalAmount: 325,
-    paymentStatus: "paid",
+    paidAmount: 325,
     items: [
       { productId: 4, productName: "พร้อมดื่ม 180ml", quantity: 13, unitPrice: 25, subtotal: 325 },
     ],
+    payments: [],
   },
 ];
 
@@ -145,3 +171,14 @@ export const dashboardSummary = {
 
 export const monthlyProfit =
   dashboardSummary.incomeThisMonth - dashboardSummary.expenseThisMonth;
+
+/** ยอดขาย 7 วันย้อนหลัง (mock สำหรับกราฟ) */
+export const weeklySales = [
+  { label: "จ.", value: 1420 },
+  { label: "อ.", value: 980 },
+  { label: "พ.", value: 1650 },
+  { label: "พฤ.", value: 2100 },
+  { label: "ศ.", value: 1830 },
+  { label: "ส.", value: 2540 },
+  { label: "อา.", value: 1980 },
+];

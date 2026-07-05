@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Prompt } from "next/font/google";
 
 import { AppShell } from "@/components/layout/app-shell";
 import { siteConfig } from "@/config/site";
@@ -7,9 +7,10 @@ import { Providers } from "@/app/providers";
 
 import "./globals.css";
 
-const inter = Inter({
-  variable: "--font-inter",
-  subsets: ["latin"],
+const prompt = Prompt({
+  variable: "--font-prompt",
+  subsets: ["latin", "thai"],
+  weight: ["300", "400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -26,7 +27,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th" suppressHydrationWarning className={`${inter.variable} h-full`}>
+    <html lang="th" suppressHydrationWarning className={`${prompt.variable} h-full`}>
       <body className="min-h-full bg-background font-sans text-foreground antialiased">
         <Providers>
           <AppShell>{children}</AppShell>

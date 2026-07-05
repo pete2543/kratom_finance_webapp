@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button, Chip, Drawer, Spinner, useOverlayState } from "@heroui/react";
+import { Button, Chip, Drawer, useOverlayState } from "@heroui/react";
 
 import {
   BellIcon,
@@ -9,6 +9,7 @@ import {
   ReceiptIcon,
   UsersIcon,
 } from "@/components/icons";
+import { CustomerDetailSkeleton } from "@/components/skeleton";
 import {
   ApiError,
   customerReportsApi,
@@ -132,9 +133,7 @@ export function CustomerDetailDrawer({
 
             <Drawer.Body className="overflow-y-auto px-5 py-4">
               {loading ? (
-                <div className="flex items-center justify-center py-16">
-                  <Spinner size="sm" />
-                </div>
+                <CustomerDetailSkeleton />
               ) : error ? (
                 <p className="rounded-xl bg-danger/10 px-3 py-2.5 text-sm text-danger">
                   {error}

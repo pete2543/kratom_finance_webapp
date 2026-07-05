@@ -19,10 +19,14 @@ export function SectionHeader({
       {actionLabel && actionHref ? (
         <Link
           href={actionHref}
-          className="flex items-center gap-0.5 text-sm font-medium text-accent"
+          className="group flex items-center gap-0.5 text-sm font-medium text-accent transition-opacity hover:opacity-80"
         >
           {actionLabel}
-          <ArrowRightIcon width={16} height={16} />
+          <ArrowRightIcon
+            width={16}
+            height={16}
+            className="transition-transform group-hover:translate-x-0.5"
+          />
         </Link>
       ) : null}
     </div>

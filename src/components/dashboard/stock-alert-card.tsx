@@ -1,3 +1,5 @@
+"use client";
+
 import { Card, ProgressBar } from "@heroui/react";
 
 import { AlertIcon } from "@/components/icons";
@@ -14,7 +16,7 @@ export function StockAlertCard({ alerts }: StockAlertCardProps) {
     <Card className="ds-card border border-warning/30 bg-warning/5">
       <Card.Content className="p-4">
         <div className="mb-3 flex items-center gap-2">
-          <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-warning/20 text-warning">
+          <span className="dashboard-alert-pulse flex h-8 w-8 items-center justify-center rounded-lg bg-warning/20 text-warning">
             <AlertIcon width={18} height={18} />
           </span>
           <div>
@@ -26,10 +28,14 @@ export function StockAlertCard({ alerts }: StockAlertCardProps) {
         </div>
 
         <ul className="space-y-3">
-          {alerts.map((a) => {
+          {alerts.map((a, index) => {
             const ratio = Math.min(a.stockQty / a.reorderLevel, 1);
             return (
-              <li key={a.productId} className="space-y-1.5">
+              <li
+                key={a.productId}
+                className="dashboard-alert-item space-y-1.5"
+                style={{ "--stagger": index } as React.CSSProperties}
+              >
                 <div className="flex items-center justify-between gap-2">
                   <span className="truncate text-sm text-foreground">
                     {a.productName}
@@ -43,6 +49,7 @@ export function StockAlertCard({ alerts }: StockAlertCardProps) {
                   color="warning"
                   size="sm"
                   aria-label={`คงเหลือ ${a.productName}`}
+                  className="dashboard-progress"
                 >
                   <ProgressBar.Track>
                     <ProgressBar.Fill />

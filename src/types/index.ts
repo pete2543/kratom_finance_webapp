@@ -1,6 +1,11 @@
-/** โครงตาม kratom_finance_db.sql */
+/** โครงตาม kratom_finance_db.sql + API */
 
-export type SaleTypeCode = "retail" | "wholesale" | "credit";
+export type SaleTypeCode =
+  | "cash"
+  | "transfer"
+  | "credit"
+  | "retail"
+  | "wholesale";
 export type PaymentStatusCode = "paid" | "partial" | "unpaid";
 export type PaymentMethodCode = "cash" | "transfer" | "promptpay";
 
@@ -24,7 +29,14 @@ export type Customer = {
   creditLimit: number;
 };
 
+export type OrderCustomer = {
+  id: number;
+  name: string;
+  phone?: string;
+};
+
 export type OrderItem = {
+  id?: number;
   productId: number;
   productName: string;
   quantity: number;
@@ -32,16 +44,37 @@ export type OrderItem = {
   subtotal: number;
 };
 
+export type OrderPayment = {
+  id: number;
+  amount: number;
+  methodId: number;
+  methodCode: string;
+  methodLabelTh: string;
+  paidAt: string;
+  note?: string | null;
+};
+
 export type Order = {
   id: number;
   code: string;
+  customer?: OrderCustomer | null;
   customerName: string;
+  saleTypeId?: number;
+  saleTypeCode: string;
+  saleTypeLabelTh: string;
+  /** legacy / mock */
   saleType: SaleTypeCode;
-  orderDate: string;
-  dueDate?: string;
-  totalAmount: number;
+  paymentStatusId?: number;
+  paymentStatusCode: PaymentStatusCode;
+  paymentStatusLabelTh: string;
   paymentStatus: PaymentStatusCode;
+  totalAmount: number;
+  paidAmount: number;
+  orderDate: string;
+  dueDate?: string | null;
+  note?: string | null;
   items: OrderItem[];
+  payments: OrderPayment[];
 };
 
 export type StockAlert = {

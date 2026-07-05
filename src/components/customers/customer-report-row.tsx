@@ -1,4 +1,4 @@
-import { Chip } from "@heroui/react";
+import { Avatar, Chip } from "@heroui/react";
 
 import { ArrowRightIcon } from "@/components/icons";
 import { formatCurrency, formatDateShort } from "@/lib/format";
@@ -11,28 +11,26 @@ type CustomerReportRowProps = {
 
 export function CustomerReportRow({ customer, onSelect }: CustomerReportRowProps) {
   const hasOutstanding = customer.outstandingAmount > 0;
-  const initial = customer.name.trim().charAt(0);
+  const initial = customer.name.trim().charAt(0) || "?";
 
   return (
     <li>
       <button
         type="button"
         onClick={() => onSelect(customer)}
-        className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-default/60"
+        className="group flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors active:bg-default/60"
       >
-        <span
-          className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-base font-semibold ${
-            hasOutstanding
-              ? "bg-danger/12 text-danger"
-              : "bg-accent/12 text-accent"
-          }`}
+        <Avatar
+          size="md"
+          color={hasOutstanding ? "danger" : "accent"}
+          className="shrink-0"
         >
-          {initial}
-        </span>
+          <Avatar.Fallback className="text-sm font-semibold">{initial}</Avatar.Fallback>
+        </Avatar>
 
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
-            <p className="truncate text-sm font-medium text-foreground">
+            <p className="truncate text-sm font-semibold text-foreground">
               {customer.name}
             </p>
             {hasOutstanding ? (
@@ -41,7 +39,7 @@ export function CustomerReportRow({ customer, onSelect }: CustomerReportRowProps
               </Chip>
             ) : null}
           </div>
-          <p className="mt-0.5 text-xs text-muted">
+          <p className="mt-0.5 truncate text-xs text-muted">
             {customer.phone ?? "ไม่มีเบอร์โทร"}
             {customer.lastOrderDate
               ? ` · ซื้อล่าสุด ${formatDateShort(customer.lastOrderDate)}`
@@ -60,11 +58,11 @@ export function CustomerReportRow({ customer, onSelect }: CustomerReportRowProps
                 {formatCurrency(customer.totalAmount)}
               </p>
             )}
-            <p className="text-xs text-muted">
-              {customer.orderCount} ออเดอร์
-            </p>
+            <p className="text-xs text-muted">{customer.orderCount} ออเดอร์</p>
           </div>
-          <ArrowRightIcon width={16} height={16} className="text-muted" />
+          <span className="flex h-7 w-7 items-center justify-center rounded-full text-muted transition-colors group-active:bg-default">
+            <ArrowRightIcon width={14} height={14} />
+          </span>
         </div>
       </button>
     </li>

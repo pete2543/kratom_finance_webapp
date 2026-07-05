@@ -19,6 +19,8 @@ type StatCardProps = {
   tone?: StatTone;
   changePercent?: number;
   hint?: string;
+  compact?: boolean;
+  interactive?: boolean;
 };
 
 export function StatCard({
@@ -28,11 +30,44 @@ export function StatCard({
   tone = "neutral",
   changePercent,
   hint,
+  compact = false,
+  interactive = false,
 }: StatCardProps) {
   const isUp = (changePercent ?? 0) >= 0;
 
+  if (compact) {
+    return (
+      <Card className="ds-card h-full">
+        <Card.Content className="flex h-full flex-col p-3">
+          <span
+            className={cn(
+              "mb-2 flex h-8 w-8 items-center justify-center rounded-lg",
+              toneRing[tone],
+            )}
+          >
+            {icon}
+          </span>
+          <p className="line-clamp-2 text-[11px] leading-snug text-muted">{label}</p>
+          <p className="mt-1.5 text-lg font-semibold tabular-nums leading-none tracking-tight">
+            {value}
+          </p>
+          {hint ? (
+            <p className="mt-1 line-clamp-2 text-[10px] leading-snug text-muted">
+              {hint}
+            </p>
+          ) : null}
+        </Card.Content>
+      </Card>
+    );
+  }
+
   return (
-    <Card className="ds-card">
+    <Card
+      className={cn(
+        "ds-card",
+        interactive && "dashboard-stat-card transition-[transform,box-shadow] duration-300 hover:-translate-y-0.5 hover:shadow-lg",
+      )}
+    >
       <Card.Content className="flex flex-col gap-3 p-4">
         <div className="flex items-center justify-between">
           <span
@@ -71,5 +106,13 @@ export function StatCard({
         </div>
       </Card.Content>
     </Card>
+  );
+}
+
+export function StatGrid({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn("mb-5 grid grid-cols-3 gap-2 sm:gap-3", className)}>
+      {children}
+    </div>
   );
 }

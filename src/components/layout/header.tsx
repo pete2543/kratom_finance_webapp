@@ -1,8 +1,8 @@
 import { Button } from "@heroui/react";
 
 import { BellIcon } from "@/components/icons";
+import { BrandMark } from "@/components/layout/brand-logo";
 import { ThemeSwitcher } from "@/components/layout/theme-switcher";
-import { siteConfig } from "@/config/site";
 
 type HeaderProps = {
   title?: string;
@@ -13,12 +13,7 @@ export function Header({ title, subtitle }: HeaderProps) {
   return (
     <header className="sticky top-0 z-30 border-b border-separator bg-background/85 backdrop-blur-md">
       <div className="mx-auto flex h-14 max-w-6xl items-center justify-between gap-3 px-4 sm:px-6">
-        <div className="flex flex-col leading-tight lg:hidden">
-          <span className="text-sm font-semibold text-foreground">
-            {siteConfig.name}
-          </span>
-          <span className="text-xs text-muted">ระบบรายรับรายจ่าย</span>
-        </div>
+        <BrandMark size="sm" className="lg:hidden" />
 
         <div className="hidden flex-col leading-tight lg:flex">
           <span className="text-base font-semibold text-foreground">

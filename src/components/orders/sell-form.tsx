@@ -1,29 +1,30 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { DateValue } from "@internationalized/date";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Button, Card, Label, Spinner } from "@heroui/react";
+import { Button, Card, Label, Spinner, useOverlayState } from "@heroui/react";
 
 import {
   ArrowLeftIcon,
   BagIcon,
   CheckCircleIcon,
-  MinusIcon,
   PlusIcon,
-  SearchIcon,
 } from "@/components/icons";
+import { MobileActionBar } from "@/components/layout/mobile-action-bar";
 import {
   CustomerSelector,
   type CustomerMode,
   type NewCustomerDraft,
 } from "@/components/orders/customer-selector";
-import { ProductAvatar } from "@/components/stock/product-avatar";
+import { DueDatePicker, dueDateToIso } from "@/components/orders/due-date-picker";
+import { ProductPickerDrawer } from "@/components/orders/product-picker-drawer";
+import { SellCart } from "@/components/orders/sell-cart";
 import {
   ApiError,
   dropdownApi,
   ordersApi,
-  productsApi,
   type CheckoutOrderInput,
   type DropdownOption,
 } from "@/lib/api";
@@ -34,19 +35,15 @@ import type { Customer, Product } from "@/types";
 const fieldClassName =
   "h-12 w-full rounded-[var(--field-radius)] border border-separator bg-field-background px-3 text-base text-foreground outline-none focus:border-accent disabled:opacity-60";
 
-type CartLine = { product: Product; quantity: number };
-
 export function SellForm() {
   const router = useRouter();
+  const pickerDrawer = useOverlayState();
 
-  const [products, setProducts] = useState<Product[]>([]);
-  const [productsLoading, setProductsLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [productMap, setProductMap] = useState<Record<number, Product>>({});
+  const [cart, setCart] = useState<Record<number, number>>({});
 
   const [saleTypes, setSaleTypes] = useState<DropdownOption[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<DropdownOption[]>([]);
-
-  const [cart, setCart] = useState<Record<number, number>>({});
 
   const [customerMode, setCustomerMode] = useState<CustomerMode>("walkin");
   const [selectedCustomer, setSelectedCustomer] = useState<Customer | null>(null);
@@ -57,32 +54,29 @@ export function SellForm() {
 
   const [saleTypeId, setSaleTypeId] = useState<number | null>(null);
   const [paymentMethodId, setPaymentMethodId] = useState<number | null>(null);
-  const [dueDate, setDueDate] = useState("");
+  const [dueDate, setDueDate] = useState<DateValue | null>(null);
   const [note, setNote] = useState("");
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successCode, setSuccessCode] = useState<string | null>(null);
+  const [successTotal, setSuccessTotal] = useState(0);
 
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const [productData, saleTypeData, methodData] = await Promise.all([
-          productsApi.list({ page: 1, limit: 100, isActive: true }),
+        const [saleTypeData, methodData] = await Promise.all([
           dropdownApi.saleTypes(),
           dropdownApi.paymentMethods(),
         ]);
         if (!active) return;
-        setProducts(productData.items);
         setSaleTypes(saleTypeData);
         setPaymentMethods(methodData);
         setSaleTypeId((prev) => prev ?? saleTypeData[0]?.id ?? null);
         setPaymentMethodId((prev) => prev ?? methodData[0]?.id ?? null);
       } catch {
-        if (active) setError("โหลดข้อมูลสินค้าไม่สำเร็จ");
-      } finally {
-        if (active) setProductsLoading(false);
+        if (active) setError("โหลดข้อมูลไม่สำเร็จ");
       }
     })();
     return () => {
@@ -96,24 +90,22 @@ export function SellForm() {
   );
   const isCredit = selectedSaleType?.code === "credit";
 
-  // credit sale cannot be walk-in
   useEffect(() => {
     if (isCredit && customerMode === "walkin") {
       setCustomerMode("existing");
     }
   }, [isCredit, customerMode]);
 
-  const filteredProducts = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return products;
-    return products.filter((p) => p.name.toLowerCase().includes(q));
-  }, [products, search]);
-
-  const cartLines: CartLine[] = useMemo(() => {
-    return products
-      .filter((p) => (cart[p.id] ?? 0) > 0)
-      .map((p) => ({ product: p, quantity: cart[p.id] }));
-  }, [products, cart]);
+  const cartLines = useMemo(() => {
+    return Object.entries(cart)
+      .filter(([, qty]) => qty > 0)
+      .map(([id, quantity]) => {
+        const product = productMap[Number(id)];
+        if (!product) return null;
+        return { product, quantity };
+      })
+      .filter((line): line is { product: Product; quantity: number } => line != null);
+  }, [cart, productMap]);
 
   const total = useMemo(
     () =>
@@ -128,11 +120,12 @@ export function SellForm() {
     [cartLines],
   );
 
-  function setQty(productId: number, quantity: number) {
+  function handleQtyChange(product: Product, quantity: number) {
+    setProductMap((prev) => ({ ...prev, [product.id]: product }));
     setCart((prev) => {
       const next = { ...prev };
-      if (quantity <= 0) delete next[productId];
-      else next[productId] = quantity;
+      if (quantity <= 0) delete next[product.id];
+      else next[product.id] = quantity;
       return next;
     });
   }
@@ -141,7 +134,8 @@ export function SellForm() {
     setError(null);
 
     if (cartLines.length === 0) {
-      setError("กรุณาเลือกสินค้าอย่างน้อย 1 รายการ");
+      setError("กรุณาเพิ่มสินค้าในตะกร้าก่อน");
+      pickerDrawer.open();
       return;
     }
     if (!saleTypeId) {
@@ -185,7 +179,7 @@ export function SellForm() {
     };
 
     if (isCredit) {
-      payload.dueDate = dueDate || undefined;
+      payload.dueDate = dueDateToIso(dueDate);
     } else {
       if (!paymentMethodId) {
         setError("กรุณาเลือกช่องทางชำระเงิน");
@@ -197,6 +191,7 @@ export function SellForm() {
     setSubmitting(true);
     try {
       const order = await ordersApi.checkout(payload);
+      setSuccessTotal(total);
       setSuccessCode(order.code);
     } catch (err) {
       setError(
@@ -209,14 +204,16 @@ export function SellForm() {
 
   function resetForm() {
     setCart({});
+    setProductMap({});
     setCustomerMode("walkin");
     setSelectedCustomer(null);
     setNewCustomer({ name: "", phone: "" });
     setSaleTypeId(saleTypes[0]?.id ?? null);
-    setDueDate("");
+    setDueDate(null);
     setNote("");
     setError(null);
     setSuccessCode(null);
+    setSuccessTotal(0);
   }
 
   if (successCode) {
@@ -227,7 +224,7 @@ export function SellForm() {
         </span>
         <h1 className="mt-5 text-xl font-semibold">บันทึกการขายสำเร็จ</h1>
         <p className="mt-1 text-sm text-muted">
-          ออเดอร์ {successCode} · ยอดรวม {formatCurrency(total)}
+          ออเดอร์ {successCode} · ยอดรวม {formatCurrency(successTotal)}
         </p>
         <div className="mt-8 flex w-full flex-col gap-2">
           <Button variant="primary" onPress={resetForm}>
@@ -236,11 +233,11 @@ export function SellForm() {
           <Button
             variant="secondary"
             onPress={() => {
-              router.push("/");
+              router.push("/orders");
               router.refresh();
             }}
           >
-            กลับหน้าหลัก
+            ดูรายการออเดอร์
           </Button>
         </div>
       </div>
@@ -248,13 +245,13 @@ export function SellForm() {
   }
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-32 pt-5 sm:px-6">
+    <div className="mx-auto max-w-lg px-4 pb-mobile-action-flush pt-5 sm:px-6">
       <Link
-        href="/"
+        href="/orders"
         className="mb-4 inline-flex items-center gap-1.5 text-sm font-medium text-accent"
       >
         <ArrowLeftIcon width={16} height={16} />
-        กลับหน้าหลัก
+        กลับออเดอร์
       </Link>
 
       <div className="mb-5">
@@ -265,101 +262,36 @@ export function SellForm() {
       </div>
 
       <div className="space-y-4">
-        {/* สินค้า */}
+        {/* ตะกร้า — หน้าหลักแสดงเฉพาะสินค้าที่เลือก */}
         <Card className="ds-card overflow-hidden">
           <Card.Content className="p-4">
             <div className="mb-3 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-foreground">
-                เลือกสินค้า
-              </h2>
+              <h2 className="text-sm font-semibold text-foreground">ตะกร้า</h2>
               {totalItems > 0 ? (
-                <span className="text-xs font-medium text-accent">
-                  {totalItems} ชิ้น
+                <span className="rounded-full bg-accent/12 px-2.5 py-0.5 text-xs font-semibold text-accent">
+                  {totalItems} ชิ้น · {formatCurrency(total)}
                 </span>
               ) : null}
             </div>
 
-            <div className="relative mb-3">
-              <SearchIcon
-                width={18}
-                height={18}
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
-              />
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="ค้นหาสินค้า..."
-                className={cn(fieldClassName, "pl-10")}
-              />
-            </div>
+            <SellCart
+              lines={cartLines}
+              onQtyChange={handleQtyChange}
+              disabled={submitting}
+            />
 
-            {productsLoading ? (
-              <div className="flex items-center justify-center py-10">
-                <Spinner size="sm" />
-              </div>
-            ) : filteredProducts.length === 0 ? (
-              <p className="py-8 text-center text-sm text-muted">ไม่พบสินค้า</p>
-            ) : (
-              <ul className="-mx-1 divide-y divide-separator">
-                {filteredProducts.map((product) => {
-                  const qty = cart[product.id] ?? 0;
-                  return (
-                    <li
-                      key={product.id}
-                      className="flex items-center gap-3 px-1 py-2.5"
-                    >
-                      <ProductAvatar product={product} />
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-foreground">
-                          {product.name}
-                        </p>
-                        <p className="text-xs text-muted">
-                          {formatCurrency(product.sellingPrice)} / {product.unit}
-                        </p>
-                      </div>
-
-                      {qty > 0 ? (
-                        <div className="flex items-center gap-2">
-                          <button
-                            type="button"
-                            onClick={() => setQty(product.id, qty - 1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-default text-foreground active:opacity-70"
-                            aria-label="ลด"
-                          >
-                            <MinusIcon width={18} height={18} />
-                          </button>
-                          <span className="w-6 text-center text-base font-semibold tabular-nums">
-                            {qty}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => setQty(product.id, qty + 1)}
-                            className="flex h-9 w-9 items-center justify-center rounded-full bg-accent text-accent-foreground active:opacity-80"
-                            aria-label="เพิ่ม"
-                          >
-                            <PlusIcon width={18} height={18} />
-                          </button>
-                        </div>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={() => setQty(product.id, 1)}
-                          className="flex h-9 items-center gap-1 rounded-full bg-accent/10 px-3.5 text-sm font-semibold text-accent active:bg-accent/20"
-                        >
-                          <PlusIcon width={16} height={16} />
-                          เพิ่ม
-                        </button>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            <button
+              type="button"
+              disabled={submitting}
+              onClick={pickerDrawer.open}
+              className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-accent/10 py-3 text-sm font-semibold text-accent transition-colors active:bg-accent/20 disabled:opacity-60"
+            >
+              <PlusIcon width={18} height={18} />
+              {cartLines.length === 0 ? "เพิ่มสินค้า" : "เพิ่มสินค้าอื่น"}
+            </button>
           </Card.Content>
         </Card>
 
-        {/* ลูกค้า */}
         <Card className="ds-card overflow-hidden">
           <Card.Content className="p-4">
             <h2 className="mb-3 text-sm font-semibold text-foreground">ลูกค้า</h2>
@@ -376,7 +308,6 @@ export function SellForm() {
           </Card.Content>
         </Card>
 
-        {/* ประเภทการขายและชำระเงิน */}
         <Card className="ds-card overflow-hidden">
           <Card.Content className="space-y-4 p-4">
             <div>
@@ -404,17 +335,11 @@ export function SellForm() {
             </div>
 
             {isCredit ? (
-              <div className="space-y-2">
-                <Label htmlFor="due-date">วันครบกำหนดชำระ</Label>
-                <input
-                  id="due-date"
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                  disabled={submitting}
-                  className={fieldClassName}
-                />
-              </div>
+              <DueDatePicker
+                value={dueDate}
+                onChange={setDueDate}
+                disabled={submitting}
+              />
             ) : (
               <div>
                 <h2 className="mb-3 text-sm font-semibold text-foreground">
@@ -463,32 +388,35 @@ export function SellForm() {
         ) : null}
       </div>
 
-      {/* แถบสรุปด้านล่าง */}
-      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-separator bg-surface/95 backdrop-blur">
-        <div className="mx-auto flex max-w-lg items-center gap-3 px-4 py-3 sm:px-6">
-          <div className="min-w-0 flex-1">
-            <p className="text-xs text-muted">ยอดรวม ({totalItems} ชิ้น)</p>
-            <p className="truncate text-lg font-semibold tabular-nums text-foreground">
-              {formatCurrency(total)}
-            </p>
-          </div>
-          <Button
-            variant="primary"
-            className="h-12 flex-[1.4] gap-2"
-            isDisabled={submitting || cartLines.length === 0}
-            onPress={handleSubmit}
-          >
-            {submitting ? (
-              <Spinner size="sm" color="current" />
-            ) : (
-              <>
-                <BagIcon width={18} height={18} />
-                บันทึกการขาย
-              </>
-            )}
-          </Button>
+      <MobileActionBar flush>
+        <div className="min-w-0 flex-1">
+          <p className="text-xs text-muted">ยอดรวม ({totalItems} ชิ้น)</p>
+          <p className="truncate text-lg font-semibold tabular-nums text-foreground">
+            {formatCurrency(total)}
+          </p>
         </div>
-      </div>
+        <Button
+          variant="primary"
+          className="h-12 flex-[1.4] gap-2"
+          isDisabled={submitting || cartLines.length === 0}
+          onPress={handleSubmit}
+        >
+          {submitting ? (
+            <Spinner size="sm" color="current" />
+          ) : (
+            <>
+              <BagIcon width={18} height={18} />
+              บันทึกการขาย
+            </>
+          )}
+        </Button>
+      </MobileActionBar>
+
+      <ProductPickerDrawer
+        cart={cart}
+        onQtyChange={handleQtyChange}
+        state={pickerDrawer}
+      />
     </div>
   );
 }

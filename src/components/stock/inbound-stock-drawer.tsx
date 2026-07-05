@@ -1,10 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Key } from "@heroui/react";
 import {
   Button,
   Drawer,
   Label,
+  ListBox,
+  Select,
   Spinner,
   TextArea,
   useOverlayState,
@@ -20,6 +23,10 @@ type InboundStockDrawerProps = {
   onSuccess: () => void;
   state: ReturnType<typeof useOverlayState>;
 };
+
+function productLabel(product: Product) {
+  return `${product.name} (คงเหลือ ${formatNumber(product.stockQty)} ${product.unit})`;
+}
 
 export function InboundStockDrawer({
   products,
@@ -101,27 +108,34 @@ export function InboundStockDrawer({
             </Drawer.Header>
 
             <Drawer.Body className="space-y-4 overflow-y-auto px-5 pb-2">
-              <div className="space-y-2">
-                <Label htmlFor="inbound-product">สินค้า</Label>
-                <select
-                  id="inbound-product"
-                  value={productId}
-                  onChange={(e) => setProductId(e.target.value)}
-                  disabled={submitting || products.length === 0}
-                  className="h-12 w-full rounded-[var(--field-radius)] border border-separator bg-field-background px-3 text-base text-foreground outline-none focus:border-accent"
-                >
-                  {products.length === 0 ? (
-                    <option value="">ไม่มีสินค้า</option>
-                  ) : (
-                    products.map((product) => (
-                      <option key={product.id} value={product.id}>
-                        {product.name} (คงเหลือ {formatNumber(product.stockQty)}{" "}
-                        {product.unit})
-                      </option>
-                    ))
-                  )}
-                </select>
-              </div>
+              <Select
+                fullWidth
+                id="inbound-product"
+                placeholder="เลือกสินค้า"
+                value={productId || null}
+                onChange={(key: Key | null) => setProductId(key ? String(key) : "")}
+                isDisabled={submitting || products.length === 0}
+              >
+                <Label>สินค้า</Label>
+                <Select.Trigger>
+                  <Select.Value />
+                  <Select.Indicator />
+                </Select.Trigger>
+                <Select.Popover placement="top">
+                  <ListBox>
+                    {products.map((product) => (
+                      <ListBox.Item
+                        key={product.id}
+                        id={String(product.id)}
+                        textValue={product.name}
+                      >
+                        {productLabel(product)}
+                        <ListBox.ItemIndicator />
+                      </ListBox.Item>
+                    ))}
+                  </ListBox>
+                </Select.Popover>
+              </Select>
 
               <div className="space-y-2">
                 <Label htmlFor="inbound-quantity">จำนวน</Label>
@@ -164,7 +178,7 @@ export function InboundStockDrawer({
               ) : null}
             </Drawer.Body>
 
-            <Drawer.Footer className="gap-2 border-t border-separator px-5 py-4">
+            <Drawer.Footer className="drawer-footer-safe gap-2 border-t border-separator px-5 pt-4">
               <Button
                 variant="secondary"
                 className="flex-1"

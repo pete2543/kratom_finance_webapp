@@ -29,6 +29,9 @@
   [data-theme="default"] {
     color-scheme: light;
 
+    --mobile-nav-height: 5.75rem;
+    --mobile-action-bar-height: 4.25rem;
+
     /* ── Brand palette (Kratom Finance) ── */
     --bg-main: #f4f7f5;
     --bg-card: #ffffff;
@@ -37,6 +40,8 @@
     --brand-primary: #2e7d32;
     --brand-accent: #8e24aa;
     --brand-neon: #7cb342;
+    --brand-kratom: #5a9a62;
+    --brand-finance: #2f4a38;
     --border-color: #e0e6e2;
 
     /* ── HeroUI semantic mapping ── */
@@ -81,12 +86,15 @@
     --segment-foreground: var(--text-main);
     --scrollbar: #d5ddd8;
 
-    --font-sans: var(--font-inter);
+    --font-sans: var(--font-prompt);
   }
 
   .dark,
   [data-theme="dark"] {
     color-scheme: dark;
+
+    --mobile-nav-height: 5.75rem;
+    --mobile-action-bar-height: 4.25rem;
 
     /* ── Brand palette (Kratom Finance — neon night) ── */
     --bg-main: #0b0f0c;
@@ -96,6 +104,8 @@
     --brand-primary: #4caf50;
     --brand-accent: #d81b60;
     --brand-neon: #ccff00;
+    --brand-kratom: #7cb87f;
+    --brand-finance: #c8ddd0;
     --border-color: #222d26;
 
     /* ── HeroUI semantic mapping ── */
@@ -144,11 +154,13 @@
 
 /* เชื่อม brand tokens → Tailwind utilities */
 @theme inline {
-  --font-sans: var(--font-inter);
+  --font-sans: var(--font-prompt);
 
   --color-brand-primary: var(--brand-primary);
   --color-brand-accent: var(--brand-accent);
   --color-brand-neon: var(--brand-neon);
+  --color-brand-kratom: var(--brand-kratom);
+  --color-brand-finance: var(--brand-finance);
   --color-brand-neon-foreground: var(--bg-main);
 }
 
@@ -201,5 +213,290 @@
   /* CTA สะดุดตา — ใช้ --brand-neon */
   .ds-btn-neon {
     @apply bg-brand-neon text-brand-neon-foreground font-semibold;
+  }
+
+  .page-transition-enter {
+    animation: page-enter 0.28s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .nav-link {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .brand-mark__icon {
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--brand-kratom) 18%, transparent),
+      color-mix(in srgb, var(--brand-neon) 12%, transparent)
+    );
+    color: var(--brand-kratom);
+    box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--brand-kratom) 22%, transparent);
+  }
+
+  .brand-mark__kratom {
+    font-weight: 700;
+    line-height: 1;
+    color: var(--brand-kratom);
+  }
+
+  .brand-mark__finance {
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+    color: var(--brand-finance);
+  }
+
+  .brand-mark__tm {
+    top: -0.35em;
+    color: color-mix(in srgb, var(--brand-finance) 72%, var(--muted));
+  }
+
+  .pb-mobile-nav {
+    padding-bottom: calc(var(--mobile-nav-height) + env(safe-area-inset-bottom, 0px));
+  }
+
+  .pb-mobile-action-flush {
+    padding-bottom: calc(
+      var(--mobile-action-bar-height) + env(safe-area-inset-bottom, 0px)
+    );
+  }
+
+  .drawer-footer-safe {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  /* Due date picker — ไม่ให้ popover ยืดตาม input เต็มจอ */
+  .due-date-picker__popover {
+    width: auto !important;
+    min-width: 0;
+    max-width: min(18.5rem, calc(100vw - 2rem));
+    padding: 0.75rem;
+  }
+
+  .due-date-picker__calendar.calendar {
+    width: 17.5rem;
+    max-width: 100%;
+  }
+
+  .due-date-picker__calendar .calendar__header-cell {
+    @apply px-0 pb-1.5 text-[0.6875rem] leading-none;
+  }
+
+  .due-date-picker__calendar .calendar__cell {
+    @apply aspect-square size-9 place-self-center rounded-2xl text-sm;
+  }
+
+  /* ── Dashboard (M3 motion) ── */
+  .dashboard-stagger {
+    animation: dashboard-enter 0.55s cubic-bezier(0.05, 0.7, 0.1, 1) both;
+    animation-delay: calc(var(--stagger, 0) * 60ms);
+  }
+
+  .dashboard-hero {
+    background: linear-gradient(
+      145deg,
+      color-mix(in srgb, var(--brand-primary) 92%, #000),
+      color-mix(in srgb, var(--brand-kratom) 78%, var(--brand-primary))
+    );
+    box-shadow:
+      0 1px 2px color-mix(in srgb, var(--brand-primary) 20%, transparent),
+      0 12px 32px -12px color-mix(in srgb, var(--brand-primary) 45%, transparent);
+  }
+
+  .dashboard-hero__glow {
+    position: absolute;
+    border-radius: 9999px;
+    filter: blur(40px);
+    opacity: 0.45;
+    pointer-events: none;
+  }
+
+  .dashboard-hero__glow--a {
+    top: -2rem;
+    right: -1rem;
+    width: 9rem;
+    height: 9rem;
+    background: color-mix(in srgb, var(--brand-neon) 55%, transparent);
+    animation: dashboard-float 8s ease-in-out infinite;
+  }
+
+  .dashboard-hero__glow--b {
+    bottom: -2.5rem;
+    left: -1.5rem;
+    width: 7rem;
+    height: 7rem;
+    background: color-mix(in srgb, #fff 35%, transparent);
+    animation: dashboard-float 10s ease-in-out infinite reverse;
+  }
+
+  .dashboard-live-badge {
+    @apply inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-semibold;
+    background: color-mix(in srgb, #fff 16%, transparent);
+    color: rgb(255 255 255 / 0.9);
+  }
+
+  .dashboard-live-badge__dot {
+    @apply size-1.5 rounded-full bg-brand-neon;
+    animation: dashboard-pulse 2s ease-in-out infinite;
+  }
+
+  .dashboard-hero__bar {
+    height: 100%;
+    transform-origin: left center;
+    animation: dashboard-bar-grow 0.9s cubic-bezier(0.05, 0.7, 0.1, 1) both;
+    animation-delay: 0.35s;
+  }
+
+  .dashboard-hero__bar--income {
+    background: color-mix(in srgb, var(--brand-neon) 85%, #fff);
+  }
+
+  .dashboard-hero__bar--expense {
+    background: color-mix(in srgb, #fff 28%, transparent);
+    animation-delay: 0.5s;
+  }
+
+  .dashboard-hero__metric {
+    animation: dashboard-enter 0.5s cubic-bezier(0.05, 0.7, 0.1, 1) both;
+  }
+
+  .dashboard-hero__metric:nth-child(1) {
+    animation-delay: 0.25s;
+  }
+
+  .dashboard-hero__metric:nth-child(2) {
+    animation-delay: 0.35s;
+  }
+
+  .dashboard-quick-actions {
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .dashboard-quick-actions::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dashboard-weekly-chart .recharts-surface {
+    overflow: visible;
+  }
+
+  .dashboard-weekly-chart .recharts-cartesian-grid-horizontal line:last-child {
+    stroke-opacity: 0;
+  }
+
+  .dashboard-list-item {
+    animation: dashboard-enter 0.45s cubic-bezier(0.05, 0.7, 0.1, 1) both;
+    animation-delay: calc(0.08s + var(--stagger, 0) * 55ms);
+  }
+
+  .dashboard-alert-item {
+    animation: dashboard-enter 0.45s cubic-bezier(0.05, 0.7, 0.1, 1) both;
+    animation-delay: calc(0.1s + var(--stagger, 0) * 80ms);
+  }
+
+  .dashboard-alert-pulse {
+    animation: dashboard-icon-pop 0.5s cubic-bezier(0.05, 0.7, 0.1, 1) both;
+  }
+
+  .dashboard-progress [data-slot="fill"],
+  .dashboard-progress [class*="fill"] {
+    animation: dashboard-bar-grow 0.9s cubic-bezier(0.05, 0.7, 0.1, 1) both;
+    animation-delay: calc(0.2s + var(--stagger, 0) * 80ms);
+  }
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashboard-enter {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes dashboard-float {
+  0%,
+  100% {
+    transform: translate(0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate(6px, -8px) scale(1.08);
+  }
+}
+
+@keyframes dashboard-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  50% {
+    opacity: 0.55;
+    transform: scale(0.85);
+  }
+}
+
+@keyframes dashboard-bar-grow {
+  from {
+    transform: scaleX(0);
+  }
+
+  to {
+    transform: scaleX(1);
+  }
+}
+
+@keyframes dashboard-icon-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .page-transition-enter {
+    animation: none;
+  }
+
+  .nav-indicator {
+    transition: none !important;
+  }
+
+  .dashboard-stagger,
+  .dashboard-list-item,
+  .dashboard-alert-item,
+  .dashboard-hero__glow,
+  .dashboard-hero__bar,
+  .dashboard-hero__metric,
+  .dashboard-alert-pulse,
+  .dashboard-live-badge__dot {
+    animation: none !important;
+  }
+
+  .dashboard-stat-card {
+    transition: none !important;
   }
 }

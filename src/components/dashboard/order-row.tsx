@@ -1,7 +1,7 @@
 import { Chip } from "@heroui/react";
 
 import { formatCurrency, formatDateShort, formatTime } from "@/lib/format";
-import { paymentStatusLabels, saleTypeLabels } from "@/lib/mock-data";
+import { paymentStatusLabels } from "@/lib/mock-data";
 import type { Order } from "@/types";
 
 const statusColor: Record<
@@ -15,13 +15,17 @@ const statusColor: Record<
 
 type OrderRowProps = {
   order: Order;
+  index?: number;
 };
 
-export function OrderRow({ order }: OrderRowProps) {
+export function OrderRow({ order, index = 0 }: OrderRowProps) {
   const initial = order.customerName.trim().charAt(0);
 
   return (
-    <li className="flex items-center gap-3 px-4 py-3 transition-colors hover:bg-default/60">
+    <li
+      className="dashboard-list-item flex items-center gap-3 px-4 py-3 transition-colors hover:bg-default/60"
+      style={{ "--stagger": index } as React.CSSProperties}
+    >
       <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent/12 text-base font-semibold text-accent">
         {initial}
       </span>
@@ -33,7 +37,7 @@ export function OrderRow({ order }: OrderRowProps) {
           </p>
           <span className="shrink-0 text-xs text-muted">·</span>
           <span className="shrink-0 text-xs text-muted">
-            {saleTypeLabels[order.saleType]}
+            {order.saleTypeLabelTh}
           </span>
         </div>
         <p className="mt-0.5 text-xs text-muted">
@@ -51,7 +55,7 @@ export function OrderRow({ order }: OrderRowProps) {
           variant="soft"
           color={statusColor[order.paymentStatus]}
         >
-          {paymentStatusLabels[order.paymentStatus]}
+          {order.paymentStatusLabelTh || paymentStatusLabels[order.paymentStatus]}
         </Chip>
       </div>
     </li>

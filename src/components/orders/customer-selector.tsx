@@ -1,16 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { Label, Spinner } from "@heroui/react";
+import { Label, useOverlayState } from "@heroui/react";
 
 import {
+  ArrowRightIcon,
   CheckIcon,
   PhoneIcon,
   SearchIcon,
   UserPlusIcon,
   UsersIcon,
 } from "@/components/icons";
-import { customersApi } from "@/lib/api";
+import { CustomerPickerDrawer } from "@/components/orders/customer-picker-drawer";
 import { cn } from "@/lib/utils";
 import type { Customer } from "@/types";
 
@@ -36,11 +36,36 @@ type CustomerSelectorProps = {
 const fieldClassName =
   "h-12 w-full rounded-[var(--field-radius)] border border-separator bg-field-background px-3 text-base text-foreground outline-none focus:border-accent disabled:opacity-60";
 
-const MODES: { id: CustomerMode; label: string }[] = [
-  { id: "walkin", label: "ลูกค้าทั่วไป" },
-  { id: "existing", label: "ลูกค้าเก่า" },
-  { id: "new", label: "ลูกค้าใหม่" },
+const MODES: { id: CustomerMode; label: string; hint: string }[] = [
+  { id: "walkin", label: "ทั่วไป", hint: "ไม่บันทึกชื่อ" },
+  { id: "existing", label: "ลูกค้าเก่า", hint: "เลือกจากระบบ" },
+  { id: "new", label: "ลูกค้าใหม่", hint: "สร้างใหม่" },
 ];
+
+function CustomerAvatar({
+  name,
+  selected = false,
+  size = "md",
+}: {
+  name: string;
+  selected?: boolean;
+  size?: "md" | "lg";
+}) {
+  const dim = size === "lg" ? "h-12 w-12 text-lg" : "h-10 w-10 text-base";
+  return (
+    <span
+      className={cn(
+        "flex shrink-0 items-center justify-center rounded-full font-semibold",
+        dim,
+        selected
+          ? "bg-accent text-accent-foreground"
+          : "bg-accent/12 text-accent",
+      )}
+    >
+      {name.trim().charAt(0)}
+    </span>
+  );
+}
 
 export function CustomerSelector({
   mode,
@@ -52,150 +77,108 @@ export function CustomerSelector({
   disableWalkin = false,
   disabled = false,
 }: CustomerSelectorProps) {
-  const [search, setSearch] = useState("");
-  const [results, setResults] = useState<Customer[]>([]);
-  const [loading, setLoading] = useState(false);
-  const debounceRef = useRef<number | null>(null);
+  const pickerDrawer = useOverlayState();
 
-  useEffect(() => {
-    if (mode !== "existing") return;
-    if (selectedCustomer) return;
-
-    if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    debounceRef.current = window.setTimeout(async () => {
-      setLoading(true);
-      try {
-        const data = await customersApi.list({
-          page: 1,
-          limit: 20,
-          search: search.trim() || undefined,
-        });
-        setResults(data.items);
-      } catch {
-        setResults([]);
-      } finally {
-        setLoading(false);
-      }
-    }, 250);
-
-    return () => {
-      if (debounceRef.current) window.clearTimeout(debounceRef.current);
-    };
-  }, [search, mode, selectedCustomer]);
+  function handleModeChange(next: CustomerMode) {
+    onModeChange(next);
+    if (next === "existing" && !selectedCustomer) {
+      pickerDrawer.open();
+    }
+  }
 
   return (
     <div className="space-y-3">
-      <div className="grid grid-cols-3 gap-1 rounded-2xl bg-default p-1">
+      <div className="grid grid-cols-3 gap-1.5 rounded-2xl bg-default p-1">
         {MODES.map((m) => {
           const isDisabled = disabled || (m.id === "walkin" && disableWalkin);
+          const active = mode === m.id;
           return (
             <button
               key={m.id}
               type="button"
               disabled={isDisabled}
-              onClick={() => onModeChange(m.id)}
+              onClick={() => handleModeChange(m.id)}
               className={cn(
-                "h-10 rounded-xl text-sm font-semibold transition-colors disabled:opacity-40",
-                mode === m.id
+                "flex flex-col items-center rounded-xl px-1 py-2 transition-colors disabled:opacity-40",
+                active
                   ? "bg-surface text-foreground shadow-sm"
                   : "text-muted",
               )}
             >
-              {m.label}
+              <span className="text-sm font-semibold">{m.label}</span>
+              <span className="mt-0.5 text-[10px] leading-tight opacity-80">
+                {m.hint}
+              </span>
             </button>
           );
         })}
       </div>
 
       {mode === "walkin" ? (
-        <div className="flex items-center gap-3 rounded-xl bg-default/50 px-4 py-3.5 text-muted">
-          <UsersIcon width={20} height={20} />
-          <p className="text-sm">ขายให้ลูกค้าทั่วไป — ไม่บันทึกข้อมูลลูกค้า</p>
+        <div className="flex items-center gap-3 rounded-xl bg-default/50 px-4 py-3">
+          <UsersIcon width={20} height={20} className="shrink-0 text-muted" />
+          <div>
+            <p className="text-sm font-medium text-foreground">ลูกค้าทั่วไป</p>
+            <p className="text-xs text-muted">ไม่บันทึกข้อมูลลูกค้าในออเดอร์</p>
+          </div>
+          <CheckIcon width={18} height={18} className="ml-auto shrink-0 text-accent" />
         </div>
       ) : null}
 
       {mode === "existing" ? (
         selectedCustomer ? (
-          <div className="flex items-center gap-3 rounded-xl border border-accent/30 bg-accent/8 px-4 py-3">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-accent/15 text-base font-semibold text-accent">
-              {selectedCustomer.name.trim().charAt(0)}
-            </span>
-            <div className="min-w-0 flex-1">
-              <p className="truncate font-medium text-foreground">
-                {selectedCustomer.name}
-              </p>
-              {selectedCustomer.phone ? (
-                <p className="text-xs text-muted">{selectedCustomer.phone}</p>
-              ) : null}
+          <div className="overflow-hidden rounded-xl border border-accent/30 bg-accent/8">
+            <div className="flex items-center gap-3 px-4 py-3.5">
+              <CustomerAvatar name={selectedCustomer.name} selected />
+              <div className="min-w-0 flex-1">
+                <p className="truncate font-medium text-foreground">
+                  {selectedCustomer.name}
+                </p>
+                {selectedCustomer.phone ? (
+                  <p className="text-xs text-muted">{selectedCustomer.phone}</p>
+                ) : (
+                  <p className="text-xs text-muted">ไม่มีเบอร์โทร</p>
+                )}
+              </div>
+              <CheckIcon width={20} height={20} className="shrink-0 text-accent" />
             </div>
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => onSelectCustomer(null)}
-              className="text-sm font-medium text-accent"
-            >
-              เปลี่ยน
-            </button>
+            <div className="flex border-t border-accent/20">
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={() => onSelectCustomer(null)}
+                className="flex-1 py-2.5 text-sm font-medium text-muted transition-colors active:bg-accent/10"
+              >
+                ล้าง
+              </button>
+              <button
+                type="button"
+                disabled={disabled}
+                onClick={pickerDrawer.open}
+                className="flex-1 border-l border-accent/20 py-2.5 text-sm font-semibold text-accent transition-colors active:bg-accent/10"
+              >
+                เปลี่ยน
+              </button>
+            </div>
           </div>
         ) : (
-          <div className="space-y-2">
-            <div className="relative">
-              <SearchIcon
-                width={18}
-                height={18}
-                className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-muted"
-              />
-              <input
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="ค้นหาชื่อหรือเบอร์โทร..."
-                disabled={disabled}
-                className={cn(fieldClassName, "pl-10")}
-              />
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={pickerDrawer.open}
+            className="flex w-full items-center gap-3 rounded-xl border border-dashed border-accent/40 bg-accent/5 px-4 py-4 text-left transition-colors active:bg-accent/10 disabled:opacity-60"
+          >
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-accent/12 text-accent">
+              <SearchIcon width={20} height={20} />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-semibold text-foreground">
+                เลือกลูกค้า
+              </p>
+              <p className="text-xs text-muted">แตะเพื่อค้นหาและเลือกจากระบบ</p>
             </div>
-
-            <div className="max-h-56 overflow-y-auto rounded-xl border border-separator">
-              {loading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Spinner size="sm" />
-                </div>
-              ) : results.length === 0 ? (
-                <p className="px-4 py-6 text-center text-sm text-muted">
-                  ไม่พบลูกค้า — ลองสลับไปแท็บ &quot;ลูกค้าใหม่&quot;
-                </p>
-              ) : (
-                <ul className="divide-y divide-separator">
-                  {results.map((customer) => (
-                    <li key={customer.id}>
-                      <button
-                        type="button"
-                        onClick={() => onSelectCustomer(customer)}
-                        className="flex w-full items-center gap-3 px-4 py-3 text-left transition-colors active:bg-default"
-                      >
-                        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/12 text-sm font-semibold text-accent">
-                          {customer.name.trim().charAt(0)}
-                        </span>
-                        <div className="min-w-0 flex-1">
-                          <p className="truncate text-sm font-medium text-foreground">
-                            {customer.name}
-                          </p>
-                          {customer.phone ? (
-                            <p className="text-xs text-muted">{customer.phone}</p>
-                          ) : null}
-                        </div>
-                        <CheckIcon
-                          width={18}
-                          height={18}
-                          className="text-transparent"
-                        />
-                      </button>
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </div>
+            <ArrowRightIcon width={18} height={18} className="shrink-0 text-muted" />
+          </button>
         )
       ) : null}
 
@@ -240,8 +223,28 @@ export function CustomerSelector({
               className={fieldClassName}
             />
           </div>
+          {newCustomer.name.trim() ? (
+            <div className="flex items-center gap-3 rounded-xl bg-accent/8 px-4 py-3">
+              <CustomerAvatar name={newCustomer.name.trim()} selected />
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-foreground">
+                  {newCustomer.name.trim()}
+                </p>
+                <p className="text-xs text-muted">
+                  {newCustomer.phone.trim() || "ลูกค้าใหม่ — บันทึกพร้อมออเดอร์"}
+                </p>
+              </div>
+              <CheckIcon width={18} height={18} className="shrink-0 text-accent" />
+            </div>
+          ) : null}
         </div>
       ) : null}
+
+      <CustomerPickerDrawer
+        selectedCustomerId={selectedCustomer?.id}
+        onSelect={onSelectCustomer}
+        state={pickerDrawer}
+      />
     </div>
   );
 }
